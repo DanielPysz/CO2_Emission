@@ -13,13 +13,11 @@ def add(pop,gdp):
     country = pop2021.loc[:,["Country Name", "2021"]]
     country["gdp2021"] = gdp2021["2021"]
     country = country.rename(columns={"2021":"pop2021"})
-    a = np.array(country[["gdp2021"]])
-    b = np.array(country[["pop2021"]])
-    name = "gdp2021/pop2021"
-    country[name] = np.divide(a,b)
+    country["gdp2021/pop2021"] = np.divide(np.array(country[["gdp2021"]]), np.array(country[["pop2021"]]))
     for row in country.iterrows():
-        cnt = row[1][0]
-        if cnt not in list_country:
+        if row[1][0] not in list_country:
             country = country.drop(index=(row[0]))
-    print(country)
+    country = country.sort_values(by="gdp2021/pop2021", ascending=False)
+    print(country.head(5))
+
 add(pop,gdp)
