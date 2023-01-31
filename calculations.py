@@ -1,13 +1,19 @@
 import pandas as pd
 import load
 import numpy as np
+import argparse
 
-pop = load.open_pop("C:/Users/danpy/OneDrive/Pulpit/API_SP.POP.TOTL_DS2_en_csv_v2_4751604/API_SP.POP.TOTL_DS2_en_csv_v2_4751604.csv")
-gdp = load.open_GDP("C:/Users/danpy/OneDrive/Pulpit/API_NY.GDP.MKTP.CD_DS2_en_csv_v2_4751562/API_NY.GDP.MKTP.CD_DS2_en_csv_v2_4751562.csv")
-co2 = load.open_CO2("C:/Users/danpy/OneDrive/Pulpit/co2-fossil-by-nation_zip/data/fossil-fuel-co2-emissions-by-nation_csv.csv")
-start = 2009
-koniec = 2010
-
+parser = argparse.ArgumentParser(description="Analiza danych")
+parser.add_argument("-c","--path_co2", required=False, type=str, help="Path to co2 emission file")
+parser.add_argument("-p","--path_pop",required=False, type = str, help="Path to population file")
+parser.add_argument("-g","--path_gdp",required=False, type=str, help = "Path to gdp file")
+parser.add_argument("-s","--start",required=False, type=int, help="Year when the calculations starts")
+parser.add_argument("-k","--koniec",required=False, type=int, help="Year when the calculations stops")
+args = parser.parse_args()
+co2 = load.open_CO2(args.path_co2)
+pop = load.open_pop(args.path_pop)
+gdp = load.open_GDP(args.path_gdp)
+lata = load.lat(args.start, args.koniec)
 def wspolne_kraje(pop, gdp, co2):
     popC = np.array(pop["Country Name"])
     gdpC = np.array(gdp["Country Name"])
@@ -16,18 +22,17 @@ def wspolne_kraje(pop, gdp, co2):
     wsp_kraje = [i for i in co2C if i in [country.upper() for country in popCgdpC]]
     return wsp_kraje
 
-def wspolne_lata(pop, gdp, co2, start, koniec):
+def wspolne_lata(pop, gdp, co2, lata):
     co2_lata = np.arange(int(co2["Year"][0]), int(co2["Year"][-1:]))
     pop_lata = np.arange(int(pop.columns[4]), int(pop.columns[-2:][0]))
     gdp_lata = np.arange(int(gdp.columns[4]), int(gdp.columns[-2:][0]))
     popgdp_lata = [i for i in pop_lata if i in gdp_lata]
     wsp_lata_beta = [i for i in co2_lata if i in popgdp_lata]
-    wsp_lata = [i for i in wsp_lata_beta if i in np.arange(start, koniec)]
+    wsp_lata = [i for i in wsp_lata_beta if i in lata]
     return wsp_lata
-
 def gdp_per_capita(pop, gdp):
     wsp_kraje = wspolne_kraje(pop, gdp, co2)
-    wsp_lata = wspolne_lata(pop, gdp, co2, start, koniec)
+    wsp_lata = wspolne_lata(pop, gdp, co2, lata)
     for year in wsp_lata:
         print("Tabela GDP na osobę w roku: ", year)
         popYear = pop.sort_values(by=str(year), ascending=False)
@@ -43,7 +48,7 @@ def gdp_per_capita(pop, gdp):
         print(country.head(5))
 
 def co2_per_capita(co2):
-    wsp_lata = wspolne_lata(pop, gdp, co2, start, koniec)
+    wsp_lata = wspolne_lata(pop, gdp, co2, lata)
     co2 = co2.drop(labels=["Bunker fuels (Not in Total)", "Cement", "Gas Fuel", "Solid Fuel", "Liquid Fuel", "Gas Flaring"],axis=1)
     for year in wsp_lata:
         co = co2["Year"] == year
@@ -53,7 +58,7 @@ def co2_per_capita(co2):
 
 def wzrost_emisji(co2):
     wsp_kraje = wspolne_kraje(pop, gdp, co2)
-    wsp_lata = wspolne_lata(pop, gdp, co2, start, koniec)
+    wsp_lata = wspolne_lata(pop, gdp, co2, lata)
     co2 = co2.drop(labels=["Bunker fuels (Not in Total)", "Cement", "Gas Fuel", "Solid Fuel", "Liquid Fuel", "Gas Flaring"],axis=1)
     for row in co2.iterrows():
         if row[1][1] not in [country.upper() for country in wsp_kraje]:
@@ -66,7 +71,7 @@ def wzrost_emisji(co2):
     print(now.sort_values(by="zmiana", ascending=False))
 
 #co2_per_capita(co2)
-#wzrost_emisji(co2)
+#wzrost_emisji(co2)   POPRAWIĆ! COŚ NIE DZIAŁA
 #wspolne_kraje(pop, gdp, co2)
-#gdp_per_capita(pop, gdp)
+gdp_per_capita(pop, gdp)
 #wspolne_lata(pop, gdp, co2, start, koniec)
