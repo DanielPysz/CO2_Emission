@@ -3,17 +3,6 @@ import load
 import numpy as np
 import argparse
 
-parser = argparse.ArgumentParser(description="Analiza danych")
-parser.add_argument("-c","--path_co2", required=False, type=str, help="Path to co2 emission file")
-parser.add_argument("-p","--path_pop",required=False, type = str, help="Path to population file")
-parser.add_argument("-g","--path_gdp",required=False, type=str, help = "Path to gdp file")
-parser.add_argument("-s","--start",required=False, type=int, help="Year when the calculations starts")
-parser.add_argument("-k","--koniec",required=False, type=int, help="Year when the calculations stops")
-args = parser.parse_args()
-co2 = load.open_CO2(args.path_co2)
-pop = load.open_pop(args.path_pop)
-gdp = load.open_GDP(args.path_gdp)
-lata = load.lat(args.start, args.koniec)
 def wspolne_kraje(pop, gdp, co2):
     popC = np.array(pop["Country Name"])
     gdpC = np.array(gdp["Country Name"])
@@ -60,18 +49,35 @@ def wzrost_emisji(co2):
     wsp_kraje = wspolne_kraje(pop, gdp, co2)
     wsp_lata = wspolne_lata(pop, gdp, co2, lata)
     co2 = co2.drop(labels=["Bunker fuels (Not in Total)", "Cement", "Gas Fuel", "Solid Fuel", "Liquid Fuel", "Gas Flaring"],axis=1)
-    for row in co2.iterrows():
-        if row[1][1] not in [country.upper() for country in wsp_kraje]:
-            co2 = co2.drop(index=(row[0]))
     now = co2["Year"] == wsp_lata[-1]
+    past = co2["Year"] == wsp_lata[0]
     now = co2[now].sort_values(by="Country")
-    past = co2["Year"]== wsp_lata[0]
     past = co2[past].sort_values(by="Country")
-    now["zmiana"] = np.subtract(np.array(now[["Per Capita"]]), np.array(past[["Per Capita"]]))
-    print(now.sort_values(by="zmiana", ascending=False))
+    contr_beta = [i for i in np.array(now["Country"]) if i in np.array(past["Country"])]
+    contr = [i for i in contr_beta if i in wsp_kraje]
+    for row in now.iterrows():
+        if row[1][1] not in contr :
+            now = now.drop(index=(row[0]))
+    for row in past.iterrows():
+        if row[1][1] not in contr:
+            past = past.drop(index=(row[0]))
+    now["Zmiana"] = np.subtract(np.array(now[["Per Capita"]]), np.array(past[["Per Capita"]]))
+    print("Zmiana emisji CO2:")
+    print(now.sort_values(by="Zmiana", ascending=False))
 
-#co2_per_capita(co2)
-#wzrost_emisji(co2)   POPRAWIĆ! COŚ NIE DZIAŁA
-#wspolne_kraje(pop, gdp, co2)
-gdp_per_capita(pop, gdp)
-#wspolne_lata(pop, gdp, co2, start, koniec)
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Analiza danych")
+    parser.add_argument("-c","--path_co2", required=False, type=str, help="Path to co2 emission file")
+    parser.add_argument("-p","--path_pop",required=False, type = str, help="Path to population file")
+    parser.add_argument("-g","--path_gdp",required=False, type=str, help = "Path to gdp file")
+    parser.add_argument("-s","--start",required=False, type=int, help="Year when the calculations starts")
+    parser.add_argument("-k","--koniec",required=False, type=int, help="Year when the calculations stops")
+    args = parser.parse_args()
+    co2 = load.open_CO2(args.path_co2)
+    pop = load.open_pop(args.path_pop)
+    gdp = load.open_GDP(args.path_gdp)
+    lata = load.lat(args.start, args.koniec, co2, pop, gdp)
+    #gdp_per_capita(pop, gdp)
+    #co2_per_capita(co2)
+    #wzrost_emisji(co2)
+
