@@ -80,3 +80,4 @@ if __name__ == "__main__":
     lata = load.lat(args.start, args.koniec, co2, pop, gdp)
 
 
+#Komentarz_komentarz
