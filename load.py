@@ -34,4 +34,4 @@ if __name__ == "__main__":
     parser.add_argument("-k", "--koniec", required=False, type=int, help="Year when the calculations stops")
     args = parser.parse_args()
     open_CO2(args.path_co2)
-    lat(args.start, args.koniec, co2, pop, gpd)
+    lat(args.start, args.koniec)
