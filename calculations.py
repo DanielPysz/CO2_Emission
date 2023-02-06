@@ -79,4 +79,4 @@ if __name__ == "__main__":
     gdp = load.open_GDP(args.path_gdp)
     lata = load.lat(args.start, args.koniec, co2, pop, gdp)
 
-
+#Komentarz
