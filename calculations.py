@@ -19,7 +19,8 @@ def wspolne_lata(pop, gdp, co2, lata):
     wsp_lata_beta = [i for i in co2_lata if i in popgdp_lata]
     wsp_lata = [i for i in wsp_lata_beta if i in lata]
     return wsp_lata
-def gdp_per_capita(pop, gdp):
+
+def gdp_per_capita(pop, gdp, co2, lata):
     wsp_kraje = wspolne_kraje(pop, gdp, co2)
     wsp_lata = wspolne_lata(pop, gdp, co2, lata)
     for year in wsp_lata:
@@ -36,7 +37,7 @@ def gdp_per_capita(pop, gdp):
         country = country.sort_values(by="gdp/pop", ascending=False)
         print(country.head(5))
 
-def co2_per_capita(co2):
+def co2_per_capita(co2, pop, gdp, lata):
     wsp_lata = wspolne_lata(pop, gdp, co2, lata)
     co2 = co2.drop(labels=["Bunker fuels (Not in Total)", "Cement", "Gas Fuel", "Solid Fuel", "Liquid Fuel", "Gas Flaring"],axis=1)
     for year in wsp_lata:
@@ -45,7 +46,7 @@ def co2_per_capita(co2):
         print("Emisja CO2 per capita dla roku:", year)
         print(co2Year.head(5))
 
-def wzrost_emisji(co2):
+def wzrost_emisji(co2, gdp, pop, lata):
     wsp_kraje = wspolne_kraje(pop, gdp, co2)
     wsp_lata = wspolne_lata(pop, gdp, co2, lata)
     co2 = co2.drop(labels=["Bunker fuels (Not in Total)", "Cement", "Gas Fuel", "Solid Fuel", "Liquid Fuel", "Gas Flaring"],axis=1)
@@ -77,7 +78,5 @@ if __name__ == "__main__":
     pop = load.open_pop(args.path_pop)
     gdp = load.open_GDP(args.path_gdp)
     lata = load.lat(args.start, args.koniec, co2, pop, gdp)
-    #gdp_per_capita(pop, gdp)
-    #co2_per_capita(co2)
-    #wzrost_emisji(co2)
+
 
